@@ -1,0 +1,27 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+select, input {
+    width: 150px;
+    height: 30px;
+}
+
+label {
+    display: flex;
+    justify-content:  space-between;
+    align-items: center;
+    width: 300px;
+    margin-bottom: 10px;
+}
+
+.results {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    margin-top: 2em;
+}

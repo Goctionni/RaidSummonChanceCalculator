@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Summon chance calculator</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <script src='script.js' defer></script>
+</head>
+<body>
+    <label>
+        Event:
+        <select id="event">
+            <option value="base">No event</option>
+            <option value="doubleAncient">Double Ancientshards</option>
+            <option value="doubleVoid">Double Voidshards</option>
+            <option value="doubleSacred">Double Sacredshards</option>
+        </select>
+    </label>
+    <label>
+        Shards to pull:
+        <select id="shardType">
+            <option value="ancient">Ancientshards</option>
+            <option value="void">Voidshards</option>
+            <option value="sacred">Sacredshards</option>
+        </select>
+    </label>
+    <label>
+        Num Shards:
+        <input id="numShards" type="number" value="100">
+    </label>
+    <label>
+        Num iterations:
+        <input id="numIterations" type="number" value="1000">
+    </label>
+    <button type="button" id="submit">Simulate</button>
+    <div class="results" id="results"></div>
+</body>
+</html>
