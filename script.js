@@ -124,19 +124,20 @@ function processSimulationSummary(numIterations, numShards, simulationSummary) {
     for (const rarityType of rarityTypes) {
         const rarityResults = simulationSummary[rarityType];
         // Stuff for chart
-        const chartData = new Array(numShards);
-        const dataSet = { borderColor: colors[rarityType], backgrounColor: colors[rarityType], label: rarityType, data: chartData, fill: false };
+        const dataSet = { borderColor: colors[rarityType], backgrounColor: colors[rarityType], label: rarityType, fill: false };
         datasets.push(dataSet);
         // Fill chartdata
         if (!rarityResults) {
-            chartData.fill(0);
+            dataSet.data = (new Array(numShards)).fill(0);
         } else {
-            chartData.splice(0, chartData.length, ...rarityResults);
-            // for (let i = 0; i < numShards; i++) {
-            //     let numOfRarity = rarityResults[i] || 0;
-            //     if (numOfRarity === -1) numOfRarity = 0;
-            //     chartData[i] = numOfRarity;
-            // }
+            const totalResultsOfRarity =  rarityResults.reduce((sum, n) => (sum + n), 0);
+            const numWithNoPulls = numIterations - totalResultsOfRarity;
+            dataSet.data = [];
+            dataSet.data.push(numWithNoPulls);
+            for (let numOfRarity = 1; numOfRarity < rarityResults.length; numOfRarity++) {
+                const numOfResults = rarityResults[numOfRarity];
+                dataSet.data.push(numOfResults);
+            }
         }
 
         // Stuff for text
