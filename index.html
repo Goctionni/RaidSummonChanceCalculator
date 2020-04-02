@@ -6,6 +6,7 @@
     <title>Summon chance calculator</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
     <script src='script.js' defer></script>
 </head>
 <body>
@@ -32,9 +33,11 @@
     </label>
     <label>
         Num iterations:
-        <input id="numIterations" type="number" value="1000">
+        <input id="numIterations" type="number" value="10000">
     </label>
     <button type="button" id="submit">Simulate</button>
+    <br>
+    <div class="chart-container"></div>
     <div class="results" id="results"></div>
 </body>
 </html>

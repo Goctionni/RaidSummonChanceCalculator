@@ -116,27 +116,39 @@ function toPct(n) {
     return `${beforeStr}.${afterStr}%`;
 }
 
-function padFactory(nMax) {
-    return function(n) {
-        return `${n}`.padStart(`${nMax}`.length, ' ');
-    }
-}
-
 const rarityTypes = ['rare', 'epic', 'lego'];
-function simulationSummaryToText(numIterations, simulationSummary) {
-    const padNum = padFactory(numIterations);
+const colors = {rare: '#00F', epic: '#F0F', lego: '#FF0'};
+function processSimulationSummary(numIterations, numShards, simulationSummary) {
     const summaryTexts = [];
-    console.log(Object.keys(simulationSummary));
+    const datasets = []
     for (const rarityType of rarityTypes) {
+        const rarityResults = simulationSummary[rarityType];
+        // Stuff for chart
+        const chartData = new Array(numShards);
+        const dataSet = { borderColor: colors[rarityType], backgrounColor: colors[rarityType], label: rarityType, data: chartData, fill: false };
+        datasets.push(dataSet);
+        // Fill chartdata
+        if (!rarityResults) {
+            chartData.fill(0);
+        } else {
+            chartData.splice(0, chartData.length, ...rarityResults);
+            // for (let i = 0; i < numShards; i++) {
+            //     let numOfRarity = rarityResults[i] || 0;
+            //     if (numOfRarity === -1) numOfRarity = 0;
+            //     chartData[i] = numOfRarity;
+            // }
+        }
+
+        // Stuff for text
         summaryTexts.push(`# ${rarityType}:`);
-        if (!simulationSummary[rarityType]) {
+        if (!rarityResults) {
             summaryTexts.push(`100% results with 0 ${rarityType} pulls`);
         } else {
-            const totalResultsOfRarity =  simulationSummary[rarityType].reduce((sum, n) => (sum + n), 0);
+            const totalResultsOfRarity =  rarityResults.reduce((sum, n) => (sum + n), 0);
             const numWithNoPulls = numIterations - totalResultsOfRarity;
             summaryTexts.push(`${toPct(numWithNoPulls / numIterations)} results with 0 ${rarityType} pulls`);
-            for (let numOfRarity = 0; numOfRarity < simulationSummary[rarityType].length; numOfRarity++) {
-                const numOfResults = simulationSummary[rarityType][numOfRarity];
+            for (let numOfRarity = 0; numOfRarity < rarityResults.length; numOfRarity++) {
+                const numOfResults = rarityResults[numOfRarity];
                 if (numOfResults > 0) {
                     summaryTexts.push(`${toPct(numOfResults / numIterations)} results with ${numOfRarity} ${rarityType} pulls`);
                 }
@@ -144,7 +156,7 @@ function simulationSummaryToText(numIterations, simulationSummary) {
         }
         summaryTexts.push('');
     }
-    return summaryTexts.join('\n');
+    return { summaryText: summaryTexts.join('\n'), chartData: datasets }
 }
 
 const _event = document.querySelector('#event');
@@ -153,6 +165,9 @@ const _numIterations = document.querySelector('#numIterations');
 const _numShards = document.querySelector('#numShards');
 const _submit = document.querySelector('#submit');
 const _results = document.querySelector('#results');
+const _chartContainer = document.querySelector('.chart-container');
+let chartInstance;
+let _canvas;
 
 _submit.addEventListener('click', () => {
     const event = _event.value;
@@ -164,5 +179,34 @@ _submit.addEventListener('click', () => {
     const before = Date.now();
     const simulationSummary = simulate(numIterations, numShards, shardType, event);
     const runtime = Date.now() - before;
-    _results.innerText = `Simulation Runtime: ${runtime}ms\n\n` + simulationSummaryToText(numIterations, simulationSummary);
+    const { summaryText, chartData } = processSimulationSummary(numIterations, numShards, simulationSummary);
+    _results.innerText = `Simulation Runtime: ${runtime}ms\n\n` + summaryText;
+
+    if (chartInstance) chartInstance.destroy();
+    while(_chartContainer.firstChild) _chartContainer.removeChild(_chartContainer.firstChild);
+    _canvas = document.createElement('canvas');
+    _canvas.setAttribute('id', 'chart');
+    _canvas.setAttribute('width', _chartContainer.getBoundingClientRect().width);
+    _canvas.setAttribute('height', _chartContainer.getBoundingClientRect().height);
+    _chartContainer.appendChild(_canvas);
+
+    const ctx = _canvas.getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: (new Array(numShards)).fill(0).map((x, i) => `${i}`),
+            datasets: chartData,
+        },
+        options: {
+            tooltips: {
+                callbacks: {
+                    label(tooltipItem, data) {
+                        const dataset = data.datasets[tooltipItem.datasetIndex];
+                        console.log({ tooltipItem, data, dataset })
+                        return `${tooltipItem.yLabel} results (${Math.floor(tooltipItem.yLabel / numIterations * 10000) / 100}%) with ${tooltipItem.index} ${dataset.label} pulls (of ${numShards} ${shardType} shards)`;
+                    },
+                },
+            },
+        },
+    });
 });
