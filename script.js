@@ -160,11 +160,26 @@ function processSimulationSummary(numIterations, numShards, simulationSummary) {
     return { summaryText: summaryTexts.join('\n'), chartData: datasets }
 }
 
+function resetDom() {
+    if (chartInstance) chartInstance.destroy();
+    while(_chartContainer.firstChild) _chartContainer.removeChild(_chartContainer.firstChild);
+    _canvas = document.createElement('canvas');
+    _canvas.setAttribute('id', 'chart');
+    _canvas.setAttribute('width', _chartContainer.getBoundingClientRect().width);
+    _canvas.setAttribute('height', _chartContainer.getBoundingClientRect().height);
+    _chartContainer.appendChild(_canvas);
+
+    _results.classList.remove('champion-list');
+    _results.innerHTML = '';
+}
+
 const _event = document.querySelector('#event');
 const _shardType = document.querySelector('#shardType');
 const _numIterations = document.querySelector('#numIterations');
 const _numShards = document.querySelector('#numShards');
 const _submit = document.querySelector('#submit');
+const _simulate1 = document.querySelector('#simulate1');
+const _sort = document.querySelector('#sort');
 const _results = document.querySelector('#results');
 const _chartContainer = document.querySelector('.chart-container');
 let chartInstance;
@@ -176,20 +191,15 @@ _submit.addEventListener('click', () => {
     const numIterations = _numIterations.valueAsNumber;
     const numShards = _numShards.valueAsNumber;
 
+    _chartContainer.style.display = 'block';
+    resetDom();
+
     _results.innerText = 'Simulating';
     const before = Date.now();
     const simulationSummary = simulate(numIterations, numShards, shardType, event);
     const runtime = Date.now() - before;
     const { summaryText, chartData } = processSimulationSummary(numIterations, numShards, simulationSummary);
     _results.innerText = `Simulation Runtime: ${runtime}ms\n\n` + summaryText;
-
-    if (chartInstance) chartInstance.destroy();
-    while(_chartContainer.firstChild) _chartContainer.removeChild(_chartContainer.firstChild);
-    _canvas = document.createElement('canvas');
-    _canvas.setAttribute('id', 'chart');
-    _canvas.setAttribute('width', _chartContainer.getBoundingClientRect().width);
-    _canvas.setAttribute('height', _chartContainer.getBoundingClientRect().height);
-    _chartContainer.appendChild(_canvas);
 
     const ctx = _canvas.getContext('2d');
     chartInstance = new Chart(ctx, {
@@ -203,7 +213,6 @@ _submit.addEventListener('click', () => {
                 callbacks: {
                     label(tooltipItem, data) {
                         const dataset = data.datasets[tooltipItem.datasetIndex];
-                        console.log({ tooltipItem, data, dataset })
                         return `${tooltipItem.yLabel} results (${Math.floor(tooltipItem.yLabel / numIterations * 10000) / 100}%) with ${tooltipItem.index} ${dataset.label} pulls (of ${numShards} ${shardType} shards)`;
                     },
                 },
@@ -211,3 +220,67 @@ _submit.addEventListener('click', () => {
         },
     });
 });
+
+const allChampions = [];
+const getAllChampions = async () => {
+    if (allChampions.length > 0) return;
+    const response = await fetch('https://goctionni.github.io/raid-data/champions-base-info.json');
+    const champions = await response.json();
+    const names = Object.keys(champions);
+    for (const name of names) {
+        allChampions.push({
+            name,
+            ...champions[name],
+        });
+    }
+}
+_simulate1.addEventListener('click', async () => {
+    resetDom();
+    _chartContainer.style.display = 'none';
+    _results.classList.add('champion-list');
+
+    const event = _event.value;
+    const shardType = _shardType.value;
+    const numShards = _numShards.valueAsNumber;
+
+    await getAllChampions();
+
+    const pulls = [];
+    for (let i = 0; i < numShards; i++) {
+        const result = simulatePull(shardType, event);
+        const rarity = result === 'lego' ? 'legendary' : result;
+        const poolChampions = allChampions.filter((champion) => champion.rarity === rarity).filter((champion) => {
+            if (shardType === 'void') return champion.affinity === 'void';
+            return champion.affinity !== 'void';
+        });
+        const rand = Math.floor(Math.random() * poolChampions.length);
+        const randomChampion = poolChampions[rand];
+        pulls.push(randomChampion);
+        if (!randomChampion) {
+            debugger;
+        }
+    }
+
+    const rarityTiers = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+    if (_sort.checked) {
+        pulls.sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => rarityTiers.indexOf(a.rarity) - rarityTiers.indexOf(b.rarity));
+    }
+
+    for (const pull of pulls) {
+        try {
+            const _championDiv = document.createElement('div');
+            _championDiv.classList.add('champion');
+            _championDiv.classList.add(`rarity-${pull.rarity}`);
+            const _championImg = document.createElement('img');
+            _championImg.setAttribute('src', pull.avatarUrl);
+            const _championSpan = document.createElement('span');
+            _championSpan.appendChild(document.createTextNode(pull.name));
+            _championDiv.appendChild(_championImg);
+            _championDiv.appendChild(_championSpan);
+            _results.appendChild(_championDiv);
+        }
+        catch(e) {
+            debugger;
+        }
+    }
+})
