@@ -3,24 +3,60 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Summon chance calculator</title>
+    <title>Raid Summoning Simulator</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
     <script src='script.js' defer></script>
 </head>
 <body>
+    <h1>Raid Summoning Simulator</h1>
+    <hr>
+    <h2>Global settings</h2>
+    <p>Settings (What are you pulling, during what type of event?)</p>
     <label>
-        Event:
+        <span class="label-text">Double Event:</span>
         <select id="event">
-            <option value="base">No event</option>
+            <option value="base">No 2x event</option>
             <option value="doubleAncient">Double Ancientshards</option>
             <option value="doubleVoid">Double Voidshards</option>
             <option value="doubleSacred">Double Sacredshards</option>
         </select>
     </label>
     <label>
-        Shards to pull:
+        <span class="label-text">10x Champions</span>
+        <input type="text" readonly id="tenchance" placeholder="none">
+        <button id="show-champion-picker" type="button">Pick champions</button>
+        <div class="champion-picker">
+            <h2>Champion picker</h2>
+            <button class="close" type="button">&times;</button>
+            <label>
+                <span class="label-text">Group by</span>
+                <select id="group-by">
+                    <option value="rarity">Rarity</option>
+                    <option value="affinity">Affinity</option>
+                    <option value="faction">Faction</option>
+                </select>
+            </label>
+            <div class="champions">Loading</div>
+            <template id="picker-column">
+                <div class="picker-column">
+                    <strong></strong>
+                    <ul></ul>
+                </div>
+            </template>
+            <template id="picker-row">
+                <li>
+                    <label>
+                        <input type="checkbox">
+                        <span></span>
+                    </label>
+                </li>
+            </template>
+        </div>
+    </label>
+    <label>
+        <span class="label-text">Shards to pull:</span>
         <select id="shardType">
             <option value="ancient">Ancientshards</option>
             <option value="void">Voidshards</option>
@@ -28,19 +64,28 @@
         </select>
     </label>
     <label>
-        Num Shards:
+        <span class="label-text">Num Shards:</span>
         <input id="numShards" type="number" value="100">
     </label>
-    <label>
-        Num iterations:
-        <input id="numIterations" type="number" value="10000">
-    </label>
-    <button type="button" id="submit">Simulate</button>
+
     <hr>
+    <h2>Chance simulation</h2>
+    <p>Pull the chosen number of the chosen shard type, many times to see in how many of the simulation you received champions with the given rarity</p>
+    <label>
+        <span class="label-text">Num iterations:</span>
+        <input id="numIterations" type="number" value="10000">
+        <button type="button" id="submit">Simulate</button>
+    </label>
+
+    <hr>
+    <h2>Champion pulls</h2>
+    <p>Pull the chosen number of shards and see which champions you get</p>
     <div class="simulate-1-pull">
         <button type="button" id="simulate1">Simulate 1 pull</button> <label><input type="checkbox" id="sort"> Sort results</label>
     </div>
+
     <hr>
+    <h2>Results</h2>
     <div class="chart-container"></div>
     <div class="results" id="results"></div>
     

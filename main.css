@@ -8,6 +8,10 @@ body {
     margin: 0;
 }
 
+p {
+    margin-bottom: 1em;
+}
+
 body {
     padding: 16px;
 }
@@ -23,10 +27,13 @@ select, input {
 
 label {
     display: flex;
-    justify-content:  space-between;
     align-items: center;
-    width: 300px;
     margin-bottom: 10px;
+}
+
+.label-text {
+    display: block;
+    width: 150px;
 }
 
 .results {
@@ -112,4 +119,73 @@ input[type="checkbox"] {
     color: #FFF;
     text-shadow: 0 -1px #000,  0 1px #000,  -1px 0 #000,  1px 0 #000;
     border-top: solid #000 2px;
+}
+
+input + button {
+    min-width: 120px;
+    margin-left: 4px;
+    text-align: center;
+}
+
+.champion-picker {
+    display: none;
+    position: fixed;
+    top:  30px;
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+    border: solid #000 1px;
+    background-color: #fff;
+    padding: 10px;
+}
+
+.champion-picker .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    font-size: 30px;
+    padding: 0;
+    border: 0;
+    color: #FFF;
+    background-color: #B00B13;
+    cursor: pointer;
+    outline: 0;
+}
+
+.champion-picker h2 {
+    margin-bottom: 12px;
+}
+
+.champion-picker .champions {
+    display: flex;
+    position: absolute;
+    top: 85px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    overflow: auto;
+}
+
+.champion-picker ul,
+.champion-picker li {
+    display: block;
+    padding: 0;
+}
+
+.champion-picker .champions label {
+    margin-bottom: 2px;
+}
+
+.champion-picker input {
+    width: 1em;
+    height: 1em;
+    margin-right: 4px;
+}
+
+.champion-picker .picker-column + .picker-column {
+    margin-left: 30px;
 }

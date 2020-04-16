@@ -177,11 +177,25 @@ const _event = document.querySelector('#event');
 const _shardType = document.querySelector('#shardType');
 const _numIterations = document.querySelector('#numIterations');
 const _numShards = document.querySelector('#numShards');
+// 10x
+const tenchance = [];
+const _10xdialog = document.querySelector('.champion-picker');
+const _10xdialogChampionsContainer = document.querySelector('.champion-picker .champions');
+const _10xinput = document.querySelector('#tenchance');
+const _10xgroupBy = document.querySelector('#group-by');
+const _10xopenButton = document.querySelector('#show-champion-picker');
+const _10xCloseButton = document.querySelector('.champion-picker .close');
+const _pickerColumnTemplate = document.querySelector('#picker-column');
+const _pickerRowTemplate = document.querySelector('#picker-row');
+// Simulate
 const _submit = document.querySelector('#submit');
+// Champions
 const _simulate1 = document.querySelector('#simulate1');
 const _sort = document.querySelector('#sort');
+// Results
 const _results = document.querySelector('#results');
 const _chartContainer = document.querySelector('.chart-container');
+
 let chartInstance;
 let _canvas;
 
@@ -249,7 +263,10 @@ _simulate1.addEventListener('click', async () => {
     for (let i = 0; i < numShards; i++) {
         const result = simulatePull(shardType, event);
         const rarity = result === 'lego' ? 'legendary' : result;
-        const poolChampions = allChampions.filter((champion) => champion.rarity === rarity).filter((champion) => {
+        const poolChampions = allChampions.reduce((all, curr) => {
+            if (tenchance.indexOf(curr.name) === -1) return [...all, curr];
+            return [...all, ...new Array(10).fill(curr)];
+        }, []).filter((champion) => champion.rarity === rarity).filter((champion) => {
             if (shardType === 'void') return champion.affinity === 'void';
             return champion.affinity !== 'void';
         });
@@ -284,3 +301,74 @@ _simulate1.addEventListener('click', async () => {
         }
     }
 })
+
+{
+    // Function to update text in ten-chance input
+    const updateTenChanceValue = () => {
+        _10xinput.value = tenchance.join(', ');
+    }
+    // function to create a champion and add it to a group
+    const addChampionToGroup = (champion, target) => {
+        const _fragment = _pickerRowTemplate.content.cloneNode(true);
+        const _text = _fragment.querySelector('span');
+        const _checkbox = _fragment.querySelector('input');
+        _text.innerText = champion.name;
+        if (tenchance.indexOf(champion.name) >= 0) {
+            _checkbox.checked = true;
+        }
+        _checkbox.addEventListener('change', () => {
+            if (_checkbox.checked && tenchance.indexOf(champion.name) === -1) {
+                tenchance.push(champion.name);
+            } else if (!_checkbox.checked && tenchance.indexOf(champion.name) !== -1) {
+                tenchance.splice(tenchance.indexOf(champion.name), 1);
+            }
+            updateTenChanceValue();
+        });
+        target.appendChild(_fragment);
+    };
+    // function to create a group of champions
+    const addGroup = (groupTitle, champions) => {
+        const _fragment = _pickerColumnTemplate.content.cloneNode(true);
+        const _title = _fragment.querySelector('strong');
+        _title.innerText = groupTitle;
+        const _list = _fragment.querySelector('ul');
+        for (const champion of champions) {
+            addChampionToGroup(champion, _list);
+        }
+        _10xdialogChampionsContainer.appendChild(_fragment);
+    };
+    // Empty champions list
+    const groupSorting = {
+        rarity: (v1, v2) => ['legendary', 'epic', 'rare', 'uncommon', 'common'].indexOf(v1) - ['legendary', 'epic', 'rare', 'uncommon', 'common'].indexOf(v2),
+        affinity: (v1, v2) => ['magic', 'spirit', 'force', 'void'].indexOf(v1) - ['magic', 'spirit', 'force', 'void'].indexOf(v2),
+        faction: (v1, v2) => (v1 === v2) ? 0 : (v1 < v2) ? -1 : 1,
+    }
+    const emptyChampList = () => {
+        while(_10xdialogChampionsContainer.firstChild) _10xdialogChampionsContainer.removeChild(_10xdialogChampionsContainer.firstChild);
+    };
+    const fillChampionList = async () => {
+        await getAllChampions();
+        emptyChampList();
+        const groupBy = _10xgroupBy.value;
+        const groups = allChampions.reduce((all, curr) => [...new Set([...all, curr[groupBy]])], []).sort(groupSorting[groupBy]);
+        for (const group of groups) {
+            const groupChampions = allChampions.filter((champion) => champion[groupBy] === group);
+            addGroup(group, groupChampions);
+        }
+    };
+
+    const open10ChanceDialog = async () => {
+        // Load champions, the empty list
+        await fillChampionList();
+        _10xdialog.style.display = 'block';
+    };
+    
+    _10xgroupBy.addEventListener('change', fillChampionList);
+    
+    _10xinput.addEventListener('click', open10ChanceDialog);
+    _10xopenButton.addEventListener('click', open10ChanceDialog);
+    
+    _10xCloseButton.addEventListener('click', () => {
+        _10xdialog.style.display = 'none';
+    })
+}
